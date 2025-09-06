@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "405882745143",
+    "project_id": "cofipe-fb829",
+    "storage_bucket": "cofipe-fb829.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:405882745143:android:8b11bd6c9a342106ec6ab2",
+        "android_client_info": {
+          "package_name": "com.itsm.cofipe"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "405882745143-f7l83fvbqk2ml8m0vtdpece2351ocjvr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.itsm.cofipe",
+            "certificate_hash": "defe6fcd8af76b23693ee7ca1841a62f74170d23"
+          }
+        },
+        {
+          "client_id": "405882745143-bn04s2rv8708etvhp48i208amva87eua.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDh6sOARRGDZS8CIzyg2xkzypO-aUzqvuE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "405882745143-bn04s2rv8708etvhp48i208amva87eua.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
