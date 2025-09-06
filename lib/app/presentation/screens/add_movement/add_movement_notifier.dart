@@ -28,7 +28,7 @@ class AddMovementNotifier extends StateNotifier<AddMovementState> {
     required String description,
     required double amount,
     required MovementType type,
-    required String category,
+    required String categoryId,
     required DateTime date,
   }) async {
     // Validaciones básicas
@@ -53,7 +53,7 @@ class AddMovementNotifier extends StateNotifier<AddMovementState> {
       description: description,
       amount: amount,
       type: type,
-      category: category,
+      categoryId: categoryId,
       date: date,
       createdAt: DateTime.now(), // Se sobrescribe por el timestamp del servidor
     );

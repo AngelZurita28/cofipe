@@ -49,7 +49,7 @@ class _AddMovementSheetState extends ConsumerState<AddMovementSheet> {
           description: _descriptionController.text,
           amount: amount,
           type: _selectedType,
-          category:
+          categoryId:
               _selectedCategory!.name, // Pasamos el nombre de la categoría
           date: _selectedDate,
         );
@@ -163,8 +163,14 @@ class _AddMovementSheetState extends ConsumerState<AddMovementSheet> {
               },
             ),
             const SizedBox(height: 16),
+            const SizedBox(height: 24),
 
-            // ... (resto del código del submit button) ...
+            state.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ElevatedButton(
+                    onPressed: _submit,
+                    child: const Text('Guardar Movimiento'),
+                  ),
           ],
         ),
       ),

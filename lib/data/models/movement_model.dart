@@ -11,7 +11,7 @@ class MovementModel {
   final String description;
   final double amount;
   final MovementType type;
-  final String category;
+  final String categoryId;
   final DateTime date;
   final DateTime createdAt;
 
@@ -21,7 +21,7 @@ class MovementModel {
     required this.description,
     required this.amount,
     required this.type,
-    required this.category,
+    required this.categoryId,
     required this.date,
     required this.createdAt,
   });
@@ -33,7 +33,7 @@ class MovementModel {
       'description': description,
       'amount': amount,
       'type': type.name, // Guarda el enum como un String (e.g., 'income')
-      'category': category,
+      'categoryId': categoryId,
       'date': Timestamp.fromDate(date), // Convierte DateTime a Timestamp
       'createdAt':
           FieldValue.serverTimestamp(), // Firestore pone la fecha del servidor
@@ -55,7 +55,7 @@ class MovementModel {
         (e) => e.name == data['type'],
         orElse: () => MovementType.expense, // Valor por defecto
       ),
-      category: data['category'] ?? 'General',
+      categoryId: data['categoryId'] ?? 'General',
       // Convierte el Timestamp de Firestore de vuelta a DateTime
       date: (data['date'] as Timestamp? ?? Timestamp.now()).toDate(),
       createdAt: (data['createdAt'] as Timestamp? ?? Timestamp.now()).toDate(),
@@ -68,7 +68,7 @@ class MovementModel {
     String? description,
     double? amount,
     MovementType? type,
-    String? category,
+    String? categoryId,
     DateTime? date,
   }) {
     return MovementModel(
@@ -77,7 +77,7 @@ class MovementModel {
       description: description ?? this.description,
       amount: amount ?? this.amount,
       type: type ?? this.type,
-      category: category ?? this.category,
+      categoryId: categoryId ?? this.categoryId,
       date: date ?? this.date,
       createdAt: this.createdAt,
     );
