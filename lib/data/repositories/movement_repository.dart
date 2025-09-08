@@ -2,7 +2,8 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'user_repository.dart';
+import 'package:cofipe/data/repositories/user_repository.dart';
+
 import '../models/movement_model.dart';
 
 class MovementRepository {
@@ -10,36 +11,46 @@ class MovementRepository {
 
   MovementRepository(this._firestore);
 
-  // Referencia a la colección de movimientos
   CollectionReference<Map<String, dynamic>> get _movements =>
       _firestore.collection('movements');
 
-  /// Añade un nuevo documento de movimiento a Firestore.
   Future<void> addMovement(MovementModel movement) async {
     try {
-      // Usamos el método toMap() de nuestro modelo para convertir el objeto a un formato
-      // que Firestore pueda entender y lo añadimos a la colección.
       await _movements.add(movement.toMap());
     } catch (e) {
-      // Es una buena práctica manejar errores específicos y relanzarlos
-      // como una excepción más clara si es necesario.
       print("Error al añadir movimiento: $e");
       throw Exception('No se pudo guardar el movimiento.');
     }
   }
 
-  // Aquí irían otros métodos en el futuro, como:
-  // - getMovements(String userId)
-  // - updateMovement(MovementModel movement)
-  // - deleteMovement(String movementId)
+  // --- MÉTODO NUEVO PARA LEER MOVIMIENTOS ---
+  /// Obtiene un Stream con la lista de movimientos de un usuario,
+  Stream<List<MovementModel>> getMovementsStream(String userId) {
+    return _movements
+        .where('userId', isEqualTo: userId)
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => MovementModel.fromFirestore(doc))
+              .toList();
+        });
+  }
 }
 
 // --- Providers de Riverpod ---
 
-// Provider para la instancia de Firestore
-
-// Provider para nuestro MovementRepository
-// Este leerá el firestoreProvider para obtener su dependencia.
+// Provider para MovementRepository
 final movementRepositoryProvider = Provider<MovementRepository>((ref) {
   return MovementRepository(ref.watch(firestoreProvider));
+});
+
+// --- PROVIDER NUEVO PARA EL STREAM DE MOVIMIENTOS ---
+final movementsStreamProvider = StreamProvider<List<MovementModel>>((ref) {
+  final user = ref.watch(userRepositoryProvider).currentUser;
+  if (user == null) {
+    return Stream.value([]);
+  }
+  final movementRepo = ref.watch(movementRepositoryProvider);
+  return movementRepo.getMovementsStream(user.uid);
 });

@@ -1,48 +1,51 @@
 // lib/app/presentation/screens/main_layout/main_layout_screen.dart
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import '../add_movement/add_movement_sheet.dart';
 
 class MainLayoutScreen extends StatelessWidget {
-  const MainLayoutScreen({super.key, required this.child});
+  const MainLayoutScreen({
+    super.key,
+    required this.navigationShell, // El gestor de estado de navegación de GoRouter
+  });
 
-  final Widget child;
+  final StatefulNavigationShell navigationShell;
 
-  int _calculateSelectedIndex(BuildContext context) {
-    final String location = GoRouterState.of(context).uri.toString();
-    if (location.startsWith('/dashboard')) return 1;
-    if (location.startsWith('/growth')) return 2;
-    // Agregamos el caso para el perfil
-    if (location.startsWith('/profile')) return 3;
-    return 0;
-  }
-
-  void _onItemTapped(int index, BuildContext context) {
-    switch (index) {
-      case 0:
-        context.go('/');
-        break;
-      case 1:
-        context.go('/dashboard');
-        break;
-      case 2:
-        context.go('/growth');
-        break;
-      // Agregamos el caso para el perfil
-      case 3:
-        // TODO: Crear la ruta y pantalla de perfil
-        // context.go('/profile');
-        break;
-    }
-  }
+  // Las definiciones de nuestros ítems de navegación
+  static const List<Map<String, String>> navItems = [
+    {
+      'path': '/',
+      'label': 'Inicio',
+      'outline': 'assets/icons/home-outline.svg',
+      'solid': 'assets/icons/home-solid.svg',
+    },
+    {
+      'path': '/dashboard',
+      'label': 'Panel',
+      'outline': 'assets/icons/chart-pie-outline.svg',
+      'solid': 'assets/icons/chart-pie-solid.svg',
+    },
+    {
+      'path': '/growth',
+      'label': 'Crecimiento',
+      'outline': 'assets/icons/arrow-trending-up-outline.svg',
+      'solid': 'assets/icons/arrow-trending-up-solid.svg',
+    },
+    {
+      'path': '/profile',
+      'label': 'Perfil',
+      'outline': 'assets/icons/user-outline.svg',
+      'solid': 'assets/icons/user-solid.svg',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final currentIndex = _calculateSelectedIndex(context);
-
     return Scaffold(
-      body: child,
+      // El cuerpo ahora es el navigationShell, que contiene la pantalla activa
+      body: navigationShell,
+
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // --- LÓGICA PARA ABRIR EL MODAL ---
@@ -60,76 +63,48 @@ class MainLayoutScreen extends StatelessWidget {
         child: const Icon(Icons.add),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
         notchMargin: 8.0,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            // 2. Pasamos las rutas de los SVG en lugar de los IconData
-            _buildNavItem(
-              context: context,
-              index: 0,
-              currentIndex: currentIndex,
-              outlineAsset: 'assets/icons/home-outline.svg',
-              solidAsset: 'assets/icons/home-solid.svg',
-              label: 'Inicio',
-            ),
-            _buildNavItem(
-              context: context,
-              index: 1,
-              currentIndex: currentIndex,
-              outlineAsset: 'assets/icons/chart-pie-outline.svg',
-              solidAsset: 'assets/icons/chart-pie-solid.svg',
-              label: 'Panel',
-            ),
-            const SizedBox(width: 48), // Espacio para el FAB
-            _buildNavItem(
-              context: context,
-              index: 2,
-              currentIndex: currentIndex,
-              outlineAsset: 'assets/icons/arrow-trending-up-outline.svg',
-              solidAsset: 'assets/icons/arrow-trending-up-solid.svg',
-              label: 'Crecimiento',
-            ),
-            _buildNavItem(
-              context: context,
-              index: 3,
-              currentIndex: currentIndex,
-              outlineAsset: 'assets/icons/user-outline.svg',
-              solidAsset: 'assets/icons/user-solid.svg',
-              label: 'Perfil',
-            ),
+            ...navItems
+                .sublist(0, 2)
+                .map((item) => _buildNavItem(context, item)),
+            const SizedBox(width: 48),
+            ...navItems
+                .sublist(2, 4)
+                .map((item) => _buildNavItem(context, item)),
           ],
         ),
       ),
     );
   }
 
-  // 3. Modificamos el helper para que acepte las rutas de los SVG
-  Widget _buildNavItem({
-    required BuildContext context,
-    required int index,
-    required int currentIndex,
-    required String outlineAsset,
-    required String solidAsset,
-    required String label,
-  }) {
-    final bool isSelected = index == currentIndex;
+  // El helper para construir cada ítem
+  Widget _buildNavItem(BuildContext context, Map<String, String> item) {
+    // El índice actual nos lo da directamente el navigationShell
+    final bool isSelected =
+        navigationShell.currentIndex ==
+        navItems.indexWhere((i) => i['label'] == item['label']);
     final color = isSelected
         ? Theme.of(context).colorScheme.primary
         : Colors.grey;
-    final asset = isSelected ? solidAsset : outlineAsset;
+    final asset = isSelected ? item['solid']! : item['outline']!;
 
     return InkWell(
-      onTap: () => _onItemTapped(index, context),
+      // La navegación ahora la gestiona el navigationShell
+      onTap: () => navigationShell.goBranch(
+        navItems.indexWhere((i) => i['label'] == item['label']!),
+      ),
       borderRadius: BorderRadius.circular(24),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Usamos SvgPicture.asset en lugar de Icon
             SvgPicture.asset(
               asset,
               height: 24,
@@ -137,7 +112,7 @@ class MainLayoutScreen extends StatelessWidget {
               colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
             ),
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(color: color, fontSize: 12)),
+            Text(item['label']!, style: TextStyle(color: color, fontSize: 12)),
           ],
         ),
       ),
