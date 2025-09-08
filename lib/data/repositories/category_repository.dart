@@ -12,8 +12,6 @@ class CategoryRepository {
   /// Obtiene un Stream con las categorías predeterminadas ('system') y
   /// las personalizadas del usuario actual.
   Stream<List<CategoryModel>> getCategoriesStream(String userId) {
-    // This query efficiently gets all documents where the userId is either
-    // the user's own ID or the special 'system' ID for default categories.
     return _firestore
         .collection('categories')
         .where('userId', whereIn: ['system', userId])
@@ -25,7 +23,15 @@ class CategoryRepository {
         });
   }
 
-  // Future methods for adding, updating, or deleting categories will go here.
+  Future<void> addCategory(CategoryModel category) async {
+    try {
+      // Usamos el método toMap() que ya habíamos creado en el modelo.
+      await _firestore.collection('categories').add(category.toMap());
+    } catch (e) {
+      print("Error al añadir categoría: $e");
+      throw Exception('No se pudo guardar la categoría.');
+    }
+  }
 }
 
 // --- Providers de Riverpod ---

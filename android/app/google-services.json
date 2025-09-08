@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "405882745143-dk1bkoal8523relej8s5riierohftprm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.itsm.cofipe",
+            "certificate_hash": "19583e4aa58f4b71407cbdbdb614dc2aaff29933"
+          }
+        },
+        {
           "client_id": "405882745143-f7l83fvbqk2ml8m0vtdpece2351ocjvr.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

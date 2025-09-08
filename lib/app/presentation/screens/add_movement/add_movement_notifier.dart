@@ -6,24 +6,27 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../data/models/movement_model.dart';
 import '../../../../data/repositories/movement_repository.dart';
 import '../../../../data/repositories/user_repository.dart';
+import '../../../../data/repositories/goal_repository.dart'; // <-- 1. Import GoalRepository
 
-// 1. Definir el estado que nuestro Notifier manejará
+// State class (no changes)
 class AddMovementState {
   final bool isLoading;
   final String? errorMessage;
-
   AddMovementState({this.isLoading = false, this.errorMessage});
 }
 
-// 2. Crear el Notifier
+// The Notifier
 class AddMovementNotifier extends StateNotifier<AddMovementState> {
   final MovementRepository _movementRepository;
+  final GoalRepository _goalRepository; // <-- 2. Add GoalRepository dependency
   final User? _currentUser;
 
-  AddMovementNotifier(this._movementRepository, this._currentUser)
-    : super(AddMovementState());
+  AddMovementNotifier(
+    this._movementRepository,
+    this._goalRepository,
+    this._currentUser,
+  ) : super(AddMovementState());
 
-  // Método para guardar el movimiento
   Future<bool> saveMovement({
     required String description,
     required double amount,
@@ -31,37 +34,50 @@ class AddMovementNotifier extends StateNotifier<AddMovementState> {
     required String categoryId,
     required DateTime date,
   }) async {
-    // Validaciones básicas
     if (_currentUser == null) {
-      state = AddMovementState(errorMessage: 'Usuario no autenticado.');
+      state = AddMovementState(errorMessage: 'Error: Usuario no autenticado.');
       return false;
     }
     if (description.isEmpty || amount <= 0) {
       state = AddMovementState(
-        errorMessage: 'Descripción y monto son requeridos.',
+        errorMessage: 'La descripción y el monto son obligatorios.',
       );
       return false;
     }
 
-    // Iniciar el estado de carga
     state = AddMovementState(isLoading: true);
 
-    // Crear el objeto del modelo
     final newMovement = MovementModel(
-      id: '', // Firestore lo generará
-      userId: _currentUser.uid,
+      id: '',
+      userId: _currentUser!.uid,
       description: description,
       amount: amount,
       type: type,
       categoryId: categoryId,
       date: date,
-      createdAt: DateTime.now(), // Se sobrescribe por el timestamp del servidor
+      createdAt: DateTime.now(),
     );
 
     try {
+      // Step A: Save the new movement
       await _movementRepository.addMovement(newMovement);
+
+      // --- 3. LOGIC TO UPDATE GOAL ---
+      // Step B: If the movement was an income, check for goals in that category
+      if (type == MovementType.income) {
+        final goals = await _goalRepository.getGoalsByCategoryFuture(
+          _currentUser!.uid,
+          categoryId,
+        );
+
+        // Step C: If goals exist, update their progress
+        for (final goal in goals) {
+          await _goalRepository.updateGoalProgress(goal.id, amount);
+        }
+      }
+
       state = AddMovementState(isLoading: false);
-      return true; // Éxito
+      return true; // Success
     } catch (e) {
       state = AddMovementState(isLoading: false, errorMessage: e.toString());
       return false; // Error
@@ -69,11 +85,19 @@ class AddMovementNotifier extends StateNotifier<AddMovementState> {
   }
 }
 
-// 3. Crear el Provider para nuestro Notifier
+// The Provider
 final addMovementNotifierProvider =
     StateNotifierProvider<AddMovementNotifier, AddMovementState>((ref) {
       final movementRepository = ref.watch(movementRepositoryProvider);
-      // Obtenemos el usuario actual para pasarlo al notifier
+      final goalRepository = ref.watch(
+        goalRepositoryProvider,
+      ); // <-- 4. Get GoalRepository
       final currentUser = ref.watch(userRepositoryProvider).currentUser;
-      return AddMovementNotifier(movementRepository, currentUser);
+
+      // <-- 5. Pass GoalRepository to the notifier
+      return AddMovementNotifier(
+        movementRepository,
+        goalRepository,
+        currentUser,
+      );
     });

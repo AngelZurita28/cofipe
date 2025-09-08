@@ -36,6 +36,22 @@ class MovementRepository {
               .toList();
         });
   }
+
+  Stream<List<MovementModel>> getMovementsByCategoryStream(
+    String userId,
+    String categoryId,
+  ) {
+    return _movements
+        .where('userId', isEqualTo: userId)
+        .where('categoryId', isEqualTo: categoryId) // <-- El filtro clave
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => MovementModel.fromFirestore(doc))
+              .toList();
+        });
+  }
 }
 
 // --- Providers de Riverpod ---
@@ -54,3 +70,13 @@ final movementsStreamProvider = StreamProvider<List<MovementModel>>((ref) {
   final movementRepo = ref.watch(movementRepositoryProvider);
   return movementRepo.getMovementsStream(user.uid);
 });
+
+// Provider para obtener movimientos por categoría
+final movementsByCategoryProvider =
+    StreamProvider.family<List<MovementModel>, String>((ref, categoryId) {
+      final user = ref.watch(userRepositoryProvider).currentUser;
+      if (user == null) return Stream.value([]);
+
+      final movementRepo = ref.watch(movementRepositoryProvider);
+      return movementRepo.getMovementsByCategoryStream(user.uid, categoryId);
+    });

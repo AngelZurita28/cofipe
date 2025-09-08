@@ -3,10 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../data/models/category_model.dart';
 import '../../../../data/repositories/category_repository.dart';
 import '../../../../data/repositories/movement_repository.dart';
 import '../../widgets/movement_list_item.dart';
+import '../../../../data/models/category_model.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AllMovementsScreen extends ConsumerWidget {
@@ -65,6 +65,7 @@ class AllMovementsScreen extends ConsumerWidget {
                           id: '',
                           name: 'Sin categoría',
                           type: movement.type,
+                          iconCodePoint: 58832,
                         ),
                       );
 

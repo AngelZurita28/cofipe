@@ -7,12 +7,14 @@ class CategoryModel {
   final String id;
   final String name;
   final String? userId;
-  final MovementType type; // Será 'system' para las predeterminadas
+  final MovementType type;
+  final int iconCodePoint;
 
   CategoryModel({
     required this.id,
     required this.type,
     required this.name,
+    required this.iconCodePoint,
     this.userId,
   });
 
@@ -29,6 +31,7 @@ class CategoryModel {
         (e) => e.name == data['type'],
         orElse: () => MovementType.expense, // Gasto por defecto
       ),
+      iconCodePoint: data['iconCodePoint'] ?? 0xe395,
     );
   }
 

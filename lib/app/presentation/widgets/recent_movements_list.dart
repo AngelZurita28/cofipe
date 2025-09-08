@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../data/models/category_model.dart';
+import '../../../data/models/movement_model.dart';
 import '../../../data/repositories/category_repository.dart';
 import '../../../data/repositories/movement_repository.dart';
 import 'movement_list_item.dart';
 
 class RecentMovementsList extends ConsumerWidget {
-  const RecentMovementsList({super.key});
+  const RecentMovementsList({super.key, this.movementsProvider});
+  final ProviderBase<AsyncValue<List<MovementModel>>>? movementsProvider;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,6 +61,7 @@ class RecentMovementsList extends ConsumerWidget {
                             id: '',
                             name: 'Sin categoría',
                             type: movement.type,
+                            iconCodePoint: 58832,
                           ),
                         );
 

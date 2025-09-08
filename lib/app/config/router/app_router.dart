@@ -13,6 +13,7 @@ import '../../presentation/screens/growth/growth_screen.dart';
 import '../../presentation/screens/main_layout/main_layout_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
 import '../../presentation/screens/all_movements/all_movements_screen.dart';
+import '../../presentation/screens/category_detail/category_detail_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final userRepository = ref.watch(userRepositoryProvider);
@@ -33,37 +34,52 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
 
-      // --- CAMBIAMOS A STATEFULSHELLROUTE ---
+      // --- RUTA MOVILIDA A NIVEL SUPERIOR ---
+      // Ahora es una pantalla completa e independiente
+      GoRoute(
+        path: '/movements',
+        builder: (context, state) => const AllMovementsScreen(),
+      ),
+
       StatefulShellRoute.indexedStack(
-        // El constructor de nuestra "carcasa" o layout principal
         builder: (context, state, navigationShell) {
           return MainLayoutScreen(navigationShell: navigationShell);
         },
-
-        // Las "ramas" o pestañas de nuestra navegación
         branches: [
-          // Rama para "Inicio"
+          // Rama para "Inicio" (ahora solo contiene la ruta raíz)
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/',
                 builder: (context, state) => const HomeScreen(),
               ),
-              GoRoute(
-                path: '/movements',
-                builder: (context, state) => const AllMovementsScreen(),
-              ),
             ],
           ),
+
           // Rama para "Panel"
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/dashboard',
                 builder: (context, state) => const DashboardScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'category/:id',
+                    builder: (context, state) {
+                      final categoryId = state.pathParameters['id']!;
+                      final categoryName =
+                          state.extra as String? ?? 'Categoría';
+                      return CategoryDetailScreen(
+                        categoryId: categoryId,
+                        categoryName: categoryName,
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),
+
           // Rama para "Crecimiento"
           StatefulShellBranch(
             routes: [
@@ -73,6 +89,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+
           // Rama para "Perfil"
           StatefulShellBranch(
             routes: [
