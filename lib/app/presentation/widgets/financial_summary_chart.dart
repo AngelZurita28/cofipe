@@ -191,7 +191,7 @@ class FinancialSummaryChart extends ConsumerWidget {
           _buildLegendItem(
             context,
             summary.balance >= 0 ? balanceColor : expenseColor,
-            summary.balance >= 0 ? 'Ahorro' : 'Déficit',
+            summary.balance >= 0 ? 'Restante' : 'Déficit',
             '\$${summary.balance.abs().toStringAsFixed(2)}',
             '${balancePercentage.abs().toStringAsFixed(1)}%',
           ),

@@ -1,18 +1,15 @@
-// lib/app/presentation/screens/main_layout/main_layout_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../add_movement/add_movement_sheet.dart';
+import '../chatbot/chatbot_sheet.dart';
+import '../chatbot/chatbot_overlay.dart';
 
 class MainLayoutScreen extends StatelessWidget {
-  const MainLayoutScreen({
-    super.key,
-    required this.navigationShell, // El gestor de estado de navegación de GoRouter
-  });
+  const MainLayoutScreen({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
-  // Las definiciones de nuestros ítems de navegación
   static const List<Map<String, String>> navItems = [
     {
       'path': '/',
@@ -42,50 +39,82 @@ class MainLayoutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // El cuerpo ahora es el navigationShell, que contiene la pantalla activa
-      body: navigationShell,
-
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // --- LÓGICA PARA ABRIR EL MODAL ---
-          showModalBottomSheet(
-            context: context,
-            builder: (ctx) => const AddMovementSheet(),
-            isScrollControlled:
-                true, // Permite que el modal se ajuste al teclado
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    return Stack(
+      children: [
+        Scaffold(
+          body: navigationShell,
+          floatingActionButton: FloatingActionButton(
+            heroTag: 'add_movement_fab',
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (ctx) => const AddMovementSheet(),
+                isScrollControlled: true,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+              );
+            },
+            shape: const CircleBorder(),
+            child: const Icon(Icons.add),
+          ),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerDocked,
+          bottomNavigationBar: BottomAppBar(
+            shape: const CircularNotchedRectangle(),
+            notchMargin: 8.0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                ...navItems
+                    .sublist(0, 2)
+                    .map((item) => _buildNavItem(context, item)),
+                const SizedBox(width: 48),
+                ...navItems
+                    .sublist(2, 4)
+                    .map((item) => _buildNavItem(context, item)),
+              ],
             ),
-          );
-        },
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8.0,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            ...navItems
-                .sublist(0, 2)
-                .map((item) => _buildNavItem(context, item)),
-            const SizedBox(width: 48),
-            ...navItems
-                .sublist(2, 4)
-                .map((item) => _buildNavItem(context, item)),
-          ],
+          ),
         ),
-      ),
+
+        // --- SECCIÓN MODIFICADA PARA EL BOTÓN DEL CHATBOT ---
+        Positioned(
+          bottom: 140, // 50 píxeles desde el borde superior
+          right: 16, // 16 píxeles desde el borde derecho
+          child: FloatingActionButton(
+            heroTag: 'chatbot_fab',
+            onPressed: () {
+              showGeneralDialog(
+                context: context,
+                barrierDismissible: true,
+                barrierLabel: 'Chatbot',
+                barrierColor: Colors.black.withOpacity(0.0),
+                transitionDuration: const Duration(milliseconds: 300),
+                pageBuilder: (context, anim1, anim2) {
+                  return const ChatbotOverlay();
+                },
+                transitionBuilder: (context, anim1, anim2, child) {
+                  return FadeTransition(opacity: anim1, child: child);
+                },
+              );
+            },
+            backgroundColor: Colors.white,
+            elevation: 4.0,
+            shape: CircleBorder(
+              side: BorderSide(color: Colors.grey.shade300, width: 1),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Image.asset('assets/ai-logo.png'),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  // El helper para construir cada ítem
   Widget _buildNavItem(BuildContext context, Map<String, String> item) {
-    // El índice actual nos lo da directamente el navigationShell
     final bool isSelected =
         navigationShell.currentIndex ==
         navItems.indexWhere((i) => i['label'] == item['label']);
@@ -95,7 +124,6 @@ class MainLayoutScreen extends StatelessWidget {
     final asset = isSelected ? item['solid']! : item['outline']!;
 
     return InkWell(
-      // La navegación ahora la gestiona el navigationShell
       onTap: () => navigationShell.goBranch(
         navItems.indexWhere((i) => i['label'] == item['label']!),
       ),

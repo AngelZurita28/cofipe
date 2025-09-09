@@ -147,6 +147,56 @@ class UserRepository {
       throw Exception("Ocurrió un error inesperado al iniciar sesión.");
     }
   }
+
+  Future<void> updateUserStreak() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) return;
+
+    // Get the user's document from Firestore
+    final userDoc = await _usersCollection
+        .where('firebaseUid', isEqualTo: user.uid)
+        .limit(1)
+        .get();
+    if (userDoc.docs.isEmpty) return;
+
+    final userModel = UserModel.fromFirestore(userDoc.docs.first);
+    final docRef = userDoc.docs.first.reference;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    if (userModel.lastStreakUpdate == null) {
+      // First-ever streak update
+      await docRef.update({
+        'streakCount': 1,
+        'lastStreakUpdate': Timestamp.now(),
+      });
+    } else {
+      final lastUpdate = userModel.lastStreakUpdate!;
+      final lastUpdateDate = DateTime(
+        lastUpdate.year,
+        lastUpdate.month,
+        lastUpdate.day,
+      );
+
+      if (today.isAtSameMomentAs(lastUpdateDate)) {
+        // Already updated today, do nothing.
+        return;
+      } else if (today.difference(lastUpdateDate).inDays == 1) {
+        // It's a new consecutive day, increment the streak.
+        await docRef.update({
+          'streakCount': FieldValue.increment(1),
+          'lastStreakUpdate': Timestamp.now(),
+        });
+      } else {
+        // Missed a day, reset the streak.
+        await docRef.update({
+          'streakCount': 1,
+          'lastStreakUpdate': Timestamp.now(),
+        });
+      }
+    }
+  }
 }
 
 final firestoreProvider = Provider<FirebaseFirestore>(
@@ -155,4 +205,17 @@ final firestoreProvider = Provider<FirebaseFirestore>(
 
 final userRepositoryProvider = Provider<UserRepository>((ref) {
   return UserRepository();
+});
+final userModelStreamProvider = StreamProvider<UserModel?>((ref) {
+  final userRepo = ref.watch(userRepositoryProvider);
+  if (userRepo.currentUser == null) return Stream.value(null);
+
+  return userRepo._usersCollection
+      .where('firebaseUid', isEqualTo: userRepo.currentUser!.uid)
+      .limit(1)
+      .snapshots()
+      .map((snapshot) {
+        if (snapshot.docs.isEmpty) return null;
+        return UserModel.fromFirestore(snapshot.docs.first);
+      });
 });

@@ -23,6 +23,23 @@ class CategoryRepository {
         });
   }
 
+  Stream<List<CategoryModel>> getGoalCategoriesStream(
+    String userId,
+    String parentCategoryId,
+  ) {
+    return _firestore
+        .collection('categories')
+        .where('userId', isEqualTo: userId)
+        .where('isGoal', isEqualTo: true)
+        .where('parentCategoryId', isEqualTo: parentCategoryId)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => CategoryModel.fromFirestore(doc))
+              .toList();
+        });
+  }
+
   Future<void> addCategory(CategoryModel category) async {
     try {
       // Usamos el método toMap() que ya habíamos creado en el modelo.
@@ -56,3 +73,12 @@ final categoriesStreamProvider = StreamProvider<List<CategoryModel>>((ref) {
   // If a user is logged in, fetch their specific stream of categories.
   return ref.watch(categoryRepositoryProvider).getCategoriesStream(user.uid);
 });
+
+final goalCategoriesProvider =
+    StreamProvider.family<List<CategoryModel>, String>((ref, parentCategoryId) {
+      final user = ref.watch(userRepositoryProvider).currentUser;
+      if (user == null) return Stream.value([]);
+      return ref
+          .watch(categoryRepositoryProvider)
+          .getGoalCategoriesStream(user.uid, parentCategoryId);
+    });

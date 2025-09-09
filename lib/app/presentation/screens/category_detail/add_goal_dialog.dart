@@ -1,13 +1,13 @@
-// lib/app/presentation/screens/category_detail/add_goal_dialog.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../data/models/goal_model.dart';
 import '../../../../data/repositories/goal_repository.dart';
 import '../../../../data/repositories/user_repository.dart';
+import '../../../../data/models/category_model.dart';
+import '../../../../data/models/movement_model.dart';
 
 class AddGoalDialog extends ConsumerStatefulWidget {
-  const AddGoalDialog({super.key, required this.categoryId});
-  final String categoryId;
+  const AddGoalDialog({super.key, required this.parentCategory});
+  final CategoryModel parentCategory;
 
   @override
   ConsumerState<AddGoalDialog> createState() => _AddGoalDialogState();
@@ -18,42 +18,38 @@ class _AddGoalDialogState extends ConsumerState<AddGoalDialog> {
   final _amountController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _amountController.dispose();
-    super.dispose();
-  }
-
   void _submit() {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
+    if (!_formKey.currentState!.validate()) return;
     final user = ref.read(userRepositoryProvider).currentUser;
     if (user == null) return;
 
-    final newGoal = GoalModel(
-      id: '', // Firestore will generate it
+    // Se crea el objeto de la nueva categoría-meta
+    final goalCategory = CategoryModel(
+      id: '',
       name: _nameController.text.trim(),
-      targetAmount: double.parse(_amountController.text),
-      categoryId: widget.categoryId,
+      type: MovementType.income, // Las metas siempre son de tipo ingreso
+      iconAssetName: 'hogar.svg', // Ícono de 'savings'
       userId: user.uid,
+      isGoal: true,
+      parentCategoryId: widget.parentCategory.id,
     );
 
+    final targetAmount = double.parse(_amountController.text);
+
+    // Se llama al nuevo método del repositorio que crea ambos documentos
     ref
         .read(goalRepositoryProvider)
-        .addGoal(newGoal)
+        .createGoalCategory(
+          goalCategory: goalCategory,
+          targetAmount: targetAmount,
+        )
         .then((_) {
           Navigator.of(context).pop();
         })
-        .catchError((error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${error.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
+        .catchError((e) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(e.toString())));
         });
   }
 

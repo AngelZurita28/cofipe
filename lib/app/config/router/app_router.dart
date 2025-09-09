@@ -1,10 +1,9 @@
-// lib/app/config/router/app_router.dart
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// Importa todas tus pantallas
+// Importa todos los modelos y pantallas
+import '../../../data/models/category_model.dart';
 import '../../../data/repositories/user_repository.dart';
 import '../../presentation/screens/login/login_screen.dart';
 import '../../presentation/screens/home/home_screen.dart';
@@ -14,6 +13,7 @@ import '../../presentation/screens/main_layout/main_layout_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
 import '../../presentation/screens/all_movements/all_movements_screen.dart';
 import '../../presentation/screens/category_detail/category_detail_screen.dart';
+import '../../presentation/screens/recurring_movement/recurring_movement_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final userRepository = ref.watch(userRepositoryProvider);
@@ -34,8 +34,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
 
-      // --- RUTA MOVILIDA A NIVEL SUPERIOR ---
-      // Ahora es una pantalla completa e independiente
       GoRoute(
         path: '/movements',
         builder: (context, state) => const AllMovementsScreen(),
@@ -46,7 +44,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           return MainLayoutScreen(navigationShell: navigationShell);
         },
         branches: [
-          // Rama para "Inicio" (ahora solo contiene la ruta raíz)
+          // Branch for "Home"
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -56,7 +54,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          // Rama para "Panel"
+          // Branch for "Dashboard"
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -66,21 +64,26 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'category/:id',
                     builder: (context, state) {
-                      final categoryId = state.pathParameters['id']!;
-                      final categoryName =
-                          state.extra as String? ?? 'Categoría';
-                      return CategoryDetailScreen(
-                        categoryId: categoryId,
-                        categoryName: categoryName,
-                      );
+                      final category = state.extra as CategoryModel;
+                      return CategoryDetailScreen(category: category);
                     },
+                    // --- NESTED ROUTE FOR RECURRING INCOME ---
+                    routes: [
+                      GoRoute(
+                        path: 'recurring',
+                        builder: (context, state) {
+                          final category = state.extra as CategoryModel;
+                          return RecurringMovementScreen(category: category);
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
             ],
           ),
 
-          // Rama para "Crecimiento"
+          // Branch for "Growth"
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -90,7 +93,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          // Rama para "Perfil"
+          // Branch for "Profile"
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -105,7 +108,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-// Clase auxiliar para que GoRouter pueda escuchar un Stream
+// Helper class for GoRouter to listen to a Stream
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
     notifyListeners();

@@ -65,7 +65,7 @@ class AllMovementsScreen extends ConsumerWidget {
                           id: '',
                           name: 'Sin categoría',
                           type: movement.type,
-                          iconCodePoint: 58832,
+                          iconAssetName: 'hogar.svg',
                         ),
                       );
 

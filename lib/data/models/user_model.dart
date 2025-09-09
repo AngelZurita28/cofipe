@@ -9,6 +9,8 @@ class UserModel {
   final String photoUrl;
   final DateTime createdAt;
   final String authProvider;
+  final int streakCount;
+  final DateTime? lastStreakUpdate;
 
   UserModel({
     required this.id,
@@ -17,6 +19,8 @@ class UserModel {
     required this.name,
     required this.photoUrl,
     required this.createdAt,
+    this.streakCount = 0, // Default to 0 for new users
+    this.lastStreakUpdate,
     required this.authProvider,
   });
 
@@ -43,6 +47,8 @@ class UserModel {
       name: data['name'] ?? '',
       photoUrl: data['photoUrl'] ?? '',
       createdAt: (data['createdAt'] as Timestamp? ?? Timestamp.now()).toDate(),
+      streakCount: data['streakCount'] ?? 0,
+      lastStreakUpdate: (data['lastStreakUpdate'] as Timestamp?)?.toDate(),
       authProvider: data['authProvider'] ?? 'unknown',
     );
   }
@@ -56,6 +62,8 @@ class UserModel {
       name: name ?? this.name,
       photoUrl: photoUrl ?? this.photoUrl,
       createdAt: createdAt,
+      streakCount: streakCount,
+      lastStreakUpdate: lastStreakUpdate,
       authProvider: authProvider,
     );
   }

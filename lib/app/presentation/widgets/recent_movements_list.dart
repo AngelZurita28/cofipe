@@ -14,7 +14,9 @@ class RecentMovementsList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final movementsAsyncValue = ref.watch(movementsStreamProvider);
+    final providerToWatch = movementsProvider ?? movementsStreamProvider;
+    final movementsAsyncValue = ref.watch(providerToWatch);
+
     final categoriesAsyncValue = ref.watch(categoriesStreamProvider);
 
     return Card(
@@ -61,7 +63,7 @@ class RecentMovementsList extends ConsumerWidget {
                             id: '',
                             name: 'Sin categoría',
                             type: movement.type,
-                            iconCodePoint: 58832,
+                            iconAssetName: 'hogar.svg',
                           ),
                         );
 

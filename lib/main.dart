@@ -2,16 +2,17 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/date_symbol_data_local.dart'; // <-- 1. Importa esto
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'app/config/router/app_router.dart';
 import 'app/config/theme/app_theme.dart';
 
 void main() async {
-  // --- Estos dos pasos son necesarios para la inicialización ---
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('es_MX', null); // <-- 2. Añade esta línea
-
+  await initializeDateFormatting('es_MX', null);
+  await dotenv.load(fileName: ".env");
+  Gemini.init(apiKey: dotenv.env['GEMINI_API_KEY']!);
   await Firebase.initializeApp();
 
   runApp(const ProviderScope(child: MyApp()));
@@ -27,7 +28,7 @@ class MyApp extends ConsumerWidget {
     return MaterialApp.router(
       routerConfig: goRouter,
       title: 'Finanzas Personales',
-      theme: AppTheme.getTheme(), // <-- 2. Aplica el tema aquí
+      theme: AppTheme.getTheme(),
       debugShowCheckedModeBanner: false,
     );
   }

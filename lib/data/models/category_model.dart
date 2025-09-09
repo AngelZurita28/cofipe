@@ -1,5 +1,3 @@
-// lib/data/models/category_model.dart
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'movement_model.dart';
 
@@ -8,14 +6,22 @@ class CategoryModel {
   final String name;
   final String? userId;
   final MovementType type;
-  final int iconCodePoint;
+  final String iconAssetName;
+
+  // --- CAMPOS NUEVOS PARA METAS ---
+  final bool isGoal;
+  final String? parentCategoryId;
+  final String status; // 'active', 'completed'
 
   CategoryModel({
     required this.id,
-    required this.type,
     required this.name,
-    required this.iconCodePoint,
+    required this.type,
+    required this.iconAssetName,
     this.userId,
+    this.isGoal = false, // Por defecto, una categoría no es una meta
+    this.parentCategoryId,
+    this.status = 'active',
   });
 
   factory CategoryModel.fromFirestore(
@@ -26,12 +32,14 @@ class CategoryModel {
       id: doc.id,
       name: data['name'] ?? 'Sin nombre',
       userId: data['userId'],
-      // Leemos el tipo desde Firestore y lo convertimos de String a enum
       type: MovementType.values.firstWhere(
         (e) => e.name == data['type'],
-        orElse: () => MovementType.expense, // Gasto por defecto
+        orElse: () => MovementType.expense,
       ),
-      iconCodePoint: data['iconCodePoint'] ?? 0xe395,
+      iconAssetName: data['iconAssetName'] ?? 'default-icon.svg',
+      isGoal: data['isGoal'] ?? false,
+      parentCategoryId: data['parentCategoryId'],
+      status: data['status'] ?? 'active',
     );
   }
 
@@ -39,7 +47,11 @@ class CategoryModel {
     return {
       'name': name,
       'userId': userId,
-      'type': type.name, // Guarda el enum como String ('income' o 'expense')
+      'type': type.name,
+      'iconAssetName': iconAssetName,
+      'isGoal': isGoal,
+      'parentCategoryId': parentCategoryId,
+      'status': status,
     };
   }
 }
